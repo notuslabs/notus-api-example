@@ -5,7 +5,7 @@ import { polygon } from "viem/chains";
 import { useState } from "react";
 
 type SwapQuote = {
-  swap: {
+  quotes: {
     quoteId?: string;
     expiresAt: number;
     amountIn: string;
@@ -20,7 +20,7 @@ type SwapQuote = {
     tokenOut: string;
     walletAddress: string;
     chain: string;
-  };
+  }[];
 };
 
 const apikey = "<api-key>";
@@ -79,10 +79,10 @@ export default function ConnectWalletMetamask() {
       tokenOut: BRZ_POLYGON,
       amountIn: "5",
       walletAddress: accountAbstraction,
+      toAddress: accountAbstraction,
       signerAddress: externallyOwnedAccount,
-      chain: "POLYGON",
-      chainOut: "POLYGON",
-      swapProvider: "LIFI",
+      chainIdIn: polygon.id,
+      chainIdOut: polygon.id,
       gasFeePaymentMethod: "DEDUCT_FROM_AMOUNT",
     };
     const res = await fetch(`${baseUrl}/crypto/swap`, {
@@ -165,11 +165,11 @@ export default function ConnectWalletMetamask() {
           <div>
             <h3>Swap Quote: </h3>
             <ul className="list-disc pl-6">
-              <li>Quote Id: {quote.swap.quoteId ?? ""}</li>
-              <li>Token in: {quote.swap.tokenIn}</li>
-              <li>Token out: {quote.swap.tokenOut}</li>
-              <li>Amount in: {quote.swap.amountIn}</li>
-              <li>Min amount out: {quote.swap.minAmountOut}</li>
+              <li>Quote Id: {quote.quotes[0].quoteId ?? ""}</li>
+              <li>Token in: {quote.quotes[0].tokenIn}</li>
+              <li>Token out: {quote.quotes[0].tokenOut}</li>
+              <li>Amount in: {quote.quotes[0].amountIn}</li>
+              <li>Min amount out: {quote.quotes[0].minAmountOut}</li>
             </ul>
           </div>
         )}

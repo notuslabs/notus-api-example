@@ -8,7 +8,7 @@ import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import { Web3Auth, Web3AuthOptions } from "@web3auth/modal";
 
 type SwapQuote = {
-  swap: {
+  quotes: {
     quoteId?: string;
     expiresAt: number;
     amountIn: string;
@@ -23,7 +23,7 @@ type SwapQuote = {
     tokenOut: string;
     walletAddress: string;
     chain: string;
-  };
+  }[];
 };
 
 const BRZ_POLYGON = "0x4eD141110F6EeeAbA9A1df36d8c26f684d2475Dc";
@@ -68,17 +68,29 @@ export default function ConnectWalletWeb3Auth() {
   const [txHash, setTxHash] = useState("");
 
   const getSmartWalletAddress = async () => {
-    const res = await fetch(
-      `${baseUrl}/wallets/address?externallyOwnedAccount=${externallyOwnedAccount}&factory=${FACTORY_ADDRESS}&salt=${0}`,
-      {
-        method: "GET",
-        headers: {
-          "x-api-key": apikey,
-        },
-      }
-    );
-
-    if (!res.ok) return;
+    let res = await fetch(`${baseUrl}/wallets/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apikey,
+      },
+      body: JSON.stringify({
+        externallyOwnedAccount: externallyOwnedAccount,
+        factory: FACTORY_ADDRESS,
+        salt: "0",
+      }),
+    });
+    if (!res?.ok) {
+      res = await fetch(
+        `${baseUrl}/wallets/address?externallyOwnedAccount=${externallyOwnedAccount}&factory=${FACTORY_ADDRESS}&salt=${0}`,
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": apikey,
+          },
+        }
+      );
+    }
 
     const data = await res.json();
     setAccountAbstraction(data.wallet.accountAbstraction);
@@ -91,11 +103,13 @@ export default function ConnectWalletWeb3Auth() {
       tokenOut: BRZ_POLYGON,
       amountIn: "0.8",
       walletAddress: accountAbstraction,
+      toAddress: accountAbstraction,
       signerAddress: externallyOwnedAccount,
-      chain: "POLYGON",
-      swapProvider: "PARASWAP",
+      chainIdIn: polygon.id,
+      chainIdOut: polygon.id,
       gasFeePaymentMethod: "DEDUCT_FROM_AMOUNT",
     };
+
     const res = await fetch(`${baseUrl}/crypto/swap`, {
       method: "POST",
       headers: {
@@ -259,11 +273,11 @@ export default function ConnectWalletWeb3Auth() {
           <div>
             <h3>Swap Quote: </h3>
             <ul className="list-disc pl-6">
-              <li>Quote Id: {quote.swap.quoteId}</li>
-              <li>Token in: {quote.swap.tokenIn}</li>
-              <li>Token out: {quote.swap.tokenOut}</li>
-              <li>Amount in: {quote.swap.amountIn}</li>
-              <li>Min amount out: {quote.swap.minAmountOut}</li>
+              <li>Quote Id: {quote.quotes[0].quoteId}</li>
+              <li>Token in: {quote.quotes[0].tokenIn}</li>
+              <li>Token out: {quote.quotes[0].tokenOut}</li>
+              <li>Amount in: {quote.quotes[0].amountIn}</li>
+              <li>Min amount out: {quote.quotes[0].minAmountOut}</li>
             </ul>
           </div>
         )}
